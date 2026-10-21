@@ -1,0 +1,30 @@
+!
+interface Loopback0
+ ip address {{ loopback }} 255.255.255.255
+ no shutdown
+!
+{% for iface in interfaces %}
+interface {{ iface.name }}
+ description Connected_via_Automation
+ ip address {{ iface.ip }} {{ iface.mask }}
+ ! Enable sub-second failure tracking
+ bfd interval 100 min_rx 100 multiplier 3
+ no shutdown
+!
+{% endfor %}
+
+!
+router bgp {{ asn }}
+ bgp log-neighbor-changes
+ no synchronization
+ network {{ loopback }} mask 255.255.255.255
+ !
+ ! Enable ECMP up to 2 parallel links because there are 2 spines
+ maximum-paths 2
+ !
+ {% for peer in bgp_peers %}
+ neighbor {{ peer.peer_ip }} remote-as {{ peer.remote_as }}
+ neighbor {{ peer.peer_ip }} description {{ peer.description }}
+ ! Tie BGP to millisecond BGD engine
+ neighbor {{ peer.peer_ip }} fall-over bfd
+ {% endfor %}

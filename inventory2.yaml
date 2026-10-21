@@ -1,0 +1,110 @@
+all:
+  vars:
+    ansible_user: "manager"
+    ansible_password: "young"
+    ansible_port: 22
+    anycast_mac: "00aa.bbcc.dddd"
+
+  spines:
+    Spine-1:
+      mgmt_ip: "192.168.122.11"
+      asn: 65100
+      loopback: "1.1.1.1"
+      interfaces:
+        - name: "GigabitEthernet0/1"
+          ip: "10.1.11.1"
+          mask: "255.255.255.0"
+        - name: "GigabitEthernet0/2"
+          ip: "10.1.12.1"
+          mask: "255.255.255.0"
+      bgp_peers:
+        - peer_ip: "10.1.11.2"
+          remote_as: 65200
+          description: "to_Leaf-1"
+        - peer_ip: "10.1.12.2"
+          remote_as: 65200
+          description: "to_Leaf-2"
+
+    Spine-2:
+      mgmt_ip: "192.168.122.12"
+      asn: 65100
+      loopback: "1.1.1.2"
+      interfaces:
+        - name: "GigabitEthernet0/1"
+          ip: "10.1.21.1"
+          mask: "255.255.255.0"
+        - name: "GigabitEthernet0/2"
+          ip: "10.1.22.1"
+          mask: "255.255.255.0"
+      bgp_peers:
+        - peer_ip: "10.1.21.2"
+          remote_as: 65200
+          description: "to_Leaf-1"
+        - peer_ip: "10.1.22.2"
+          remote_as: 65200
+          description: "to_Leaf-2"
+
+  leafs:
+    Leaf-1:
+      mgmt_ip: "192.168.122.21"
+      asn: 65200
+      loopback: "2.2.2.1"
+      interfaces:
+        - name: "GigabitEthernet0/1"
+          ip: "10.1.11.2"
+          mask: "255.255.255.0"
+        - name: "GigabitEthernet0/2"
+          ip: "10.1.21.2"
+          mask: "255.255.255.0"
+      bgp_peers:
+        - peer_ip: "10.1.11.1"
+          remote_as: 65100
+          description: "to_Spine-1"
+        - peer_ip: "10.1.21.1"
+          remote_as: 65100
+          description: "to_Spine-2"
+      vlans:
+        - id: 10
+          vni: 10010
+          rd: "2.2.2.1:10010"
+          rt: "65100:10010"
+          bvi_ip: "192.168.10.254"
+          bvi_mask: "255.255.255.0"
+        - id: 20
+          vni: 10020
+          rd: "2.2.2.1:10020"
+          rt: "65100:10020"
+          bvi_ip: "192.168.20.254"
+          bvi_mask: "255.255.255.0"
+
+    Leaf-2:
+      mgmt_ip: "192.168.122.22"
+      asn: 65200
+      loopback: "2.2.2.2"
+      interfaces:
+        - name: "GigabitEthernet0/1"
+          ip: "10.1.12.2"
+          mask: "255.255.255.0"
+        - name: "GigabitEthernet0/2"
+          ip: "10.1.22.2"
+          mask: "255.255.255.0"
+      bgp_peers:
+        - peer_ip: "10.1.12.1"
+          remote_as: 65100
+          description: "to_Spine-1"
+        - peer_ip: "10.1.22.1"
+          remote_as: 65100
+          description: "to_Spine-2"
+      vlans:
+        - id: 10
+          vni: 10010
+          rd: "2.2.2.2:10010"
+          rt: "65100:10010"
+          bvi_ip: "192.168.10.254"
+          bvi_mask: "255.255.255.0"
+        - id: 20
+          vni: 10020
+          rd: "2.2.2.2:10020"
+          rt: "65100:10020"
+          bvi_ip: "192.168.20.254"
+          bvi_mask: "255.255.255.0"

@@ -1,0 +1,53 @@
+!
+interface nve1
+ no shutdown
+ source-interface Loopback0
+ member vni 10010 mcast-group 239.1.1.10
+!
+router bgp {{ asn }}
+ address-family l2vpn evpn 
+  {% for peer in bgp_peers %}
+  neighbor {{ peer.peer_ip }} activate
+  neighbor {{ peer.peer_ip }} next-hop-unchanged
+  {% endfor %}
+ exit-address-family
+ 
+ ============================================
+!
+{% if vlans is defined %}
+{% for vlan in vlans %}
+vlan {{ vlan.id }}
+ name Tenant_HPC_Compute_{{ vlan.id }}
+!
+l2vpn evpn instance {{ vlan.id }} vlan {{ vlan.id }}
+ rd {{ vlan.rd }}
+ route-target export {{ vlan.rt }}
+ route-target import {{ vlan.rt }}
+!
+!
+interface BDI{{ vlan.id }}
+ description Gateway_for_HPC_Nodes
+ ip address {{ vlan.bvi_ip }} {{ vlan.bvi_mask }}
+ mac-address {{ anycast_mac }}
+ no shutdown
+!
+{% endfor %}
+
+!
+interface nve1
+ no shutdown
+ source-interface Loopback0
+{% for vlan in vlans %}
+ member vni {{ vlan.vni }} l2vpn evpn
+{% endfor %}
+!
+{% endif %}
+
+!
+router bgp {{ asn }}
+ address-family l2vpn evpn
+  {% for peer in bgp_peers %}
+  neighbor {{ peer.peer_ip }} activate
+  neighbor {{ peer.peer_ip }} send-community extended
+  {% endfor %}
+ exit-address-family

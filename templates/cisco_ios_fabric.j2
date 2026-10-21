@@ -1,0 +1,24 @@
+!
+interface Loopback0
+ ip address {{ loopback }} 255.255.255.255
+ no shutdown
+!
+{% for iface in interfaces %}
+interface {{ iface.name }}
+ description Connected_via_Automation
+ ip address {{ iface.ip }} {{ iface.mask }}
+ no shutdown
+!
+{% endfor %}
+
+!
+router bgp {{ asn }}
+ bgp log-neighbor-changes
+ no synchronization
+ !
+ network {{ loopback }} mask 255.255.255.255
+ !
+ {% for peer in bgp_peers %}
+ neighbor {{ peer.peer_ip }} remote-as {{ peer.remote_as }}
+ neighbor {{ peer.peer_ip }} description {{ peer.description }}
+ {% endfor %}
